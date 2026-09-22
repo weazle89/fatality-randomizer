@@ -1,0 +1,1185 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>FFXIV Party Randomizer</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Josefin+Sans:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0c10;
+  --surface: #12161f;
+  --surface2: #1a2030;
+  --border: #2e3d58;
+  --border-bright: #4a6090;
+  --gold: #d4a840;
+  --gold-light: #f0cc70;
+  --gold-dim: #8a7035;
+  --text: #e8dfc8;
+  --text-dim: #9a9080;
+  --tank: #6ab4ff;
+  --tank-bg: #0d1e38;
+  --heal: #5aea88;
+  --heal-bg: #0d2418;
+  --dps: #ff7878;
+  --dps-bg: #2a0e0e;
+  --pure: #8ef5b0;
+  --shield: #b89dff;
+  --melee: #ff8c3a;
+  --phys: #4dd0f8;
+  --magic: #d09aff;
+  --extern: #707880;
+  --radius: 5px;
+  --red: #ff8080;
+  --fs-base: 16px;
+  --fs-sm: 14px;
+  --fs-xs: 13px;
+  --fs-label: 13px;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Josefin Sans', sans-serif;
+  font-size: var(--fs-base);
+  line-height: 1.5;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background:
+    radial-gradient(ellipse 80% 40% at 50% -10%, #1a2540 0%, transparent 60%),
+    radial-gradient(ellipse 60% 30% at 80% 110%, #1a1030 0%, transparent 50%);
+  pointer-events: none; z-index: 0;
+}
+.page {
+  position: relative; z-index: 1;
+  max-width: 1020px; margin: 0 auto;
+  padding: 48px 28px 100px;
+}
+
+/* ── Lade-Overlay ── */
+#loadingOverlay {
+  position: fixed; inset: 0; background: var(--bg);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  z-index: 999; gap: 18px;
+}
+#loadingOverlay .spin {
+  width: 36px; height: 36px;
+  border: 2px solid var(--border); border-top-color: var(--gold);
+  border-radius: 50%; animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+#loadingOverlay p {
+  font-family: 'Josefin Sans', sans-serif; font-size: 14px;
+  letter-spacing: 0.15em; color: var(--text-dim);
+}
+#loadingOverlay.hidden { display: none; }
+
+/* ── Header ── */
+header { text-align: center; margin-bottom: 52px; }
+.header-ornament { display: flex; align-items: center; justify-content: center; gap: 18px; margin-bottom: 10px; }
+.ornament-line { height: 1px; width: 90px; background: linear-gradient(90deg, transparent, var(--gold-dim)); }
+.ornament-line.right { background: linear-gradient(90deg, var(--gold-dim), transparent); }
+.ornament-diamond { width: 9px; height: 9px; background: var(--gold); transform: rotate(45deg); box-shadow: 0 0 10px var(--gold); }
+h1 {
+  font-family: 'Cinzel', serif;
+  font-size: clamp(24px, 4vw, 40px);
+  font-weight: 700; color: var(--gold-light);
+  letter-spacing: 0.12em; text-shadow: 0 0 40px rgba(212,168,64,0.35);
+}
+.subtitle { color: var(--text-dim); font-size: 16px; margin-top: 8px; letter-spacing: 0.04em; font-style: italic; }
+
+/* ── Section titles ── */
+.section-title {
+  font-family: 'Cinzel', serif; font-size: 14px;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--gold-dim); margin-bottom: 18px;
+  display: flex; align-items: center; gap: 14px;
+}
+.section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+/* ── Inhaltstyp-Grid ── */
+.content-type-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px; margin-bottom: 44px;
+}
+.content-type-card {
+  border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 18px 20px; cursor: pointer; transition: all 0.2s;
+  background: var(--surface);
+}
+.content-type-card:hover { border-color: var(--border-bright); background: var(--surface2); }
+.content-type-card.selected {
+  border-color: var(--gold-dim); background: #1e1a0e;
+  box-shadow: inset 0 0 24px rgba(212,168,64,0.07);
+}
+.content-type-card.selected::before {
+  content: ''; display: block; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  margin: -18px -20px 16px;
+}
+.content-type-name { font-family: 'Josefin Sans', sans-serif; font-size: 15px; letter-spacing: 0.02em; color: var(--gold-light); margin-bottom: 10px; }
+.content-type-slots { display: flex; flex-wrap: wrap; gap: 5px; }
+
+/* ── Pills ── */
+.pill {
+  font-size: 12px; padding: 3px 9px; border-radius: 3px;
+  letter-spacing: 0.04em; font-family: 'Josefin Sans', sans-serif; white-space: nowrap;
+}
+.pill.tank   { background: var(--tank-bg);  color: var(--tank);   border: 1px solid rgba(106,180,255,0.35); }
+.pill.heal   { background: var(--heal-bg);  color: var(--heal);   border: 1px solid rgba(90,234,136,0.35); }
+.pill.pure   { background: var(--heal-bg);  color: var(--pure);   border: 1px solid rgba(142,245,176,0.35); }
+.pill.shield { background: #1a1035;         color: var(--shield); border: 1px solid rgba(184,157,255,0.35); }
+.pill.dps    { background: var(--dps-bg);   color: var(--dps);    border: 1px solid rgba(255,120,120,0.35); }
+.pill.melee  { background: #2a1508;         color: var(--melee);  border: 1px solid rgba(255,140,58,0.35); }
+.pill.phys   { background: #08202e;         color: var(--phys);   border: 1px solid rgba(77,208,248,0.35); }
+.pill.magic  { background: #1a0835;         color: var(--magic);  border: 1px solid rgba(208,154,255,0.35); }
+
+/* ── Spieler-Grid ── */
+.player-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(165px, 1fr));
+  gap: 10px; margin-bottom: 14px;
+}
+.player-chip {
+  position: relative; background: var(--surface);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 12px 14px; cursor: pointer; transition: all 0.2s;
+  user-select: none; display: flex; align-items: center; gap: 10px;
+  font-family: 'Josefin Sans', sans-serif; font-size: 14px;
+  letter-spacing: 0.06em; color: var(--text-dim);
+}
+.player-chip:hover { border-color: var(--border-bright); color: var(--text); background: var(--surface2); }
+.player-chip.selected { border-color: var(--gold-dim); background: #1e1a0e; color: var(--gold-light); }
+.player-chip.selected::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+}
+.player-chip .check {
+  width: 16px; height: 16px; border: 1px solid var(--border-bright);
+  border-radius: 3px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; transition: all 0.2s;
+}
+.player-chip.selected .check { background: var(--gold); border-color: var(--gold); }
+.player-chip.selected .check::after { content: '✓'; font-family: sans-serif; font-size: 11px; color: #1a1408; font-weight: bold; line-height: 1; }
+.player-chip .chip-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.player-chip .edit-icon { font-size: 14px; opacity: 0; transition: opacity 0.15s; color: var(--gold-dim); flex-shrink: 0; }
+.player-chip:hover .edit-icon { opacity: 1; }
+
+.selection-info { display: flex; justify-content: space-between; align-items: center; margin-bottom: 36px; }
+.selection-count { color: var(--text-dim); font-size: 15px; }
+.selection-count span { color: var(--gold-light); font-family: 'Josefin Sans', sans-serif; font-size: 16px; }
+.selection-needed { color: var(--text-dim); font-size: 14px; font-style: italic; }
+
+/* ── Manage-Button ── */
+.manage-btn {
+  display: block; margin: 0 auto 36px;
+  background: transparent; border: 1px solid var(--border);
+  color: var(--text-dim); font-family: 'Josefin Sans', sans-serif;
+  font-size: 14px; letter-spacing: 0.06em; padding: 9px 22px; cursor: pointer; transition: all 0.2s;
+}
+.manage-btn:hover { border-color: var(--border-bright); color: var(--text); }
+
+/* ── Fehler ── */
+.error-msg { text-align: center; color: var(--red); font-size: 16px; margin-bottom: 24px; min-height: 24px; }
+
+/* ── Würfel-Button ── */
+.btn-wrap { text-align: center; margin-bottom: 52px; }
+.btn-randomize {
+  position: relative; background: transparent;
+  border: 1px solid var(--gold-dim); color: var(--gold-light);
+  font-family: 'Josefin Sans', sans-serif; font-size: 15px;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  padding: 16px 56px; cursor: pointer; transition: all 0.3s; overflow: hidden;
+}
+.btn-randomize::before {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(212,168,64,0.1) 0%, transparent 50%);
+  opacity: 0; transition: opacity 0.3s;
+}
+.btn-randomize:hover { border-color: var(--gold); box-shadow: 0 0 36px rgba(212,168,64,0.2), inset 0 0 24px rgba(212,168,64,0.06); }
+.btn-randomize:hover::before { opacity: 1; }
+.btn-randomize:active { transform: scale(0.98); }
+.btn-randomize:disabled { opacity: 0.35; cursor: not-allowed; box-shadow: none; }
+.btn-corner { position: absolute; width: 7px; height: 7px; border-color: var(--gold); border-style: solid; }
+.btn-corner.tl { top: 4px; left: 4px; border-width: 1px 0 0 1px; }
+.btn-corner.tr { top: 4px; right: 4px; border-width: 1px 1px 0 0; }
+.btn-corner.bl { bottom: 4px; left: 4px; border-width: 0 0 1px 1px; }
+.btn-corner.br { bottom: 4px; right: 4px; border-width: 0 1px 1px 0; }
+
+/* ── Ergebnisse ── */
+.results { display: none; }
+.results.visible { display: block; animation: fadeUp 0.5s ease; }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+.results-divider { display: flex; align-items: center; gap: 18px; margin-bottom: 28px; }
+.results-divider::before { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, transparent, var(--border)); }
+.results-divider::after  { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, var(--border), transparent); }
+.results-divider-text { font-family: 'Cinzel', serif; font-size: 12px; letter-spacing: 0.2em; color: var(--text-dim); white-space: nowrap; }
+.party-list { display: flex; flex-direction: column; gap: 9px; }
+.party-row {
+  display: grid; grid-template-columns: 180px 1fr;
+  align-items: stretch; background: var(--surface);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  overflow: hidden; animation: rowIn 0.4s ease both;
+}
+@keyframes rowIn { from { opacity: 0; transform: translateX(-14px); } to { opacity: 1; transform: translateX(0); } }
+.party-row-name {
+  padding: 16px 20px; font-family: 'Josefin Sans', sans-serif; font-size: 15px;
+  letter-spacing: 0.07em; color: var(--text);
+  border-right: 1px solid var(--border); background: var(--surface2);
+  display: flex; align-items: center;
+}
+.party-row-class { padding: 16px 20px; display: flex; align-items: center; gap: 14px; }
+.class-role-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.role-tank .class-role-dot   { background: var(--tank);   box-shadow: 0 0 8px var(--tank); }
+.role-heal .class-role-dot   { background: var(--heal);   box-shadow: 0 0 8px var(--heal); }
+.role-dps .class-role-dot    { background: var(--dps);    box-shadow: 0 0 8px var(--dps); }
+.role-extern .class-role-dot { background: var(--extern); }
+.class-name { font-family: 'Cinzel', serif; font-size: 17px; letter-spacing: 0.06em; }
+.role-tank .class-name   { color: var(--tank); }
+.role-heal .class-name   { color: var(--heal); }
+.role-dps .class-name    { color: var(--dps); }
+.role-extern .class-name { color: var(--extern); font-style: italic; }
+.class-sub { font-size: 13px; color: var(--text-dim); font-style: italic; margin-left: auto; padding-left: 12px; }
+
+/* ── Modals ── */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.78);
+  z-index: 100; display: none; align-items: center; justify-content: center;
+  backdrop-filter: blur(5px);
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--surface); border: 1px solid var(--border-bright);
+  border-radius: var(--radius); padding: 36px;
+  width: min(540px, 94vw); max-height: 88vh; overflow-y: auto;
+}
+.modal.wide { width: min(740px, 96vw); }
+.modal h2 { font-family: 'Josefin Sans', sans-serif; font-size: 18px; letter-spacing: 0.1em; color: var(--gold-light); margin-bottom: 8px; }
+.modal .modal-sub { font-size: 15px; color: var(--text-dim); font-style: italic; margin-bottom: 22px; }
+.modal textarea {
+  width: 100%; background: var(--bg); border: 1px solid var(--border);
+  color: var(--text); font-family: 'Josefin Sans', sans-serif; font-size: 14px;
+  padding: 14px; border-radius: var(--radius); resize: vertical;
+  min-height: 200px; letter-spacing: 0.01em; line-height: 2; outline: none;
+}
+.modal textarea:focus { border-color: var(--gold-dim); }
+.modal-buttons { display: flex; gap: 12px; margin-top: 20px; justify-content: flex-end; }
+.modal-btn { font-family: 'Josefin Sans', sans-serif; font-size: 14px; letter-spacing: 0.02em; padding: 10px 22px; border-radius: var(--radius); cursor: pointer; transition: all 0.2s; }
+.modal-btn.cancel { background: transparent; border: 1px solid var(--border); color: var(--text-dim); }
+.modal-btn.cancel:hover { border-color: var(--border-bright); color: var(--text); }
+.modal-btn.save { background: var(--gold-dim); border: 1px solid var(--gold); color: #1a1408; font-weight: bold; }
+.modal-btn.save:hover { background: var(--gold); }
+
+/* ── Spieler-Editor ── */
+.player-editor-header { margin-bottom: 24px; }
+.player-editor-name { font-family: 'Cinzel', serif; font-size: 22px; color: var(--gold-light); letter-spacing: 0.1em; margin-bottom: 14px; }
+.lodestone-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; }
+.lodestone-row input {
+  background: var(--bg); border: 1px solid var(--border); color: var(--text);
+  font-family: 'Josefin Sans', sans-serif; font-size: 13px; padding: 8px 12px;
+  border-radius: var(--radius); outline: none; width: 180px; letter-spacing: 0.04em;
+}
+.lodestone-row input:focus { border-color: var(--gold-dim); }
+.btn-small {
+  font-family: 'Josefin Sans', sans-serif; font-size: 13px; letter-spacing: 0.02em;
+  padding: 8px 14px; border-radius: var(--radius); cursor: pointer; transition: all 0.2s;
+  background: transparent; border: 1px solid var(--border-bright); color: var(--text); white-space: nowrap;
+}
+.btn-small:hover { border-color: var(--gold-dim); color: var(--gold-light); }
+.btn-small:disabled { opacity: 0.4; cursor: not-allowed; }
+.lodestone-status { font-size: 13px; font-style: italic; color: var(--text-dim); min-height: 20px; margin-bottom: 14px; }
+.lodestone-status.ok  { color: var(--heal); }
+.lodestone-status.err { color: var(--red); }
+
+/* Level-Toggle */
+.level-toggle-row { display: flex; align-items: center; gap: 12px; font-size: 15px; color: var(--text-dim); margin-bottom: 22px; }
+.toggle-switch { position: relative; display: inline-block; width: 44px; height: 24px; cursor: pointer; flex-shrink: 0; }
+.toggle-switch input { opacity: 0; width: 0; height: 0; }
+.toggle-track { position: absolute; inset: 0; background: var(--border); border-radius: 24px; transition: background 0.2s; }
+.toggle-switch input:checked + .toggle-track { background: var(--gold-dim); }
+.toggle-thumb {
+  position: absolute; top: 3px; left: 3px;
+  width: 18px; height: 18px; background: var(--text-dim);
+  border-radius: 50%; transition: transform 0.2s, background 0.2s;
+}
+.toggle-switch input:checked ~ .toggle-thumb { transform: translateX(20px); background: var(--gold-light); }
+
+/* Tabs */
+.editor-tabs { display: flex; gap: 5px; margin-bottom: 18px; border-bottom: 1px solid var(--border); padding-bottom: 14px; }
+.editor-tab {
+  font-family: 'Josefin Sans', sans-serif; font-size: 13px; letter-spacing: 0.02em;
+  padding: 7px 14px; border-radius: var(--radius); cursor: pointer;
+  border: 1px solid transparent; color: var(--text-dim); transition: all 0.15s;
+}
+.editor-tab:hover { color: var(--text); border-color: var(--border); }
+.editor-tab.active { border-color: var(--gold-dim); color: var(--gold-light); background: #1e1a0e; }
+.editor-panel { display: none; }
+.editor-panel.active { display: block; }
+
+/* Klassen-Toggles */
+.class-editor-group { margin-bottom: 20px; }
+.class-editor-group-title {
+  font-family: 'Josefin Sans', sans-serif; font-size: 12px; letter-spacing: 0.18em;
+  text-transform: uppercase; margin-bottom: 10px; padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+}
+.class-editor-group-title.tank   { color: var(--tank); }
+.class-editor-group-title.pure   { color: var(--pure); }
+.class-editor-group-title.shield { color: var(--shield); }
+.class-editor-group-title.melee  { color: var(--melee); }
+.class-editor-group-title.phys   { color: var(--phys); }
+.class-editor-group-title.magic  { color: var(--magic); }
+.class-checkbox-grid { display: flex; flex-wrap: wrap; gap: 7px; }
+.class-toggle {
+  display: flex; align-items: center; gap: 7px;
+  padding: 7px 13px; border: 1px solid var(--border); border-radius: var(--radius);
+  cursor: pointer; transition: all 0.15s; background: var(--bg);
+  font-family: 'Josefin Sans', sans-serif; font-size: 14px; letter-spacing: 0.01em;
+  color: var(--text-dim); user-select: none;
+}
+.class-toggle:hover { border-color: var(--border-bright); color: var(--text); }
+.class-toggle.active.tank   { border-color: var(--tank);   color: var(--tank);   background: var(--tank-bg); }
+.class-toggle.active.pure,
+.class-toggle.active.heal   { border-color: var(--pure);   color: var(--pure);   background: var(--heal-bg); }
+.class-toggle.active.shield { border-color: var(--shield); color: var(--shield); background: #1a1035; }
+.class-toggle.active.melee  { border-color: var(--melee);  color: var(--melee);  background: #2a1508; }
+.class-toggle.active.phys   { border-color: var(--phys);   color: var(--phys);   background: #08202e; }
+.class-toggle.active.magic  { border-color: var(--magic);  color: var(--magic);  background: #1a0835; }
+.tog-dot { width: 7px; height: 7px; border-radius: 50%; border: 1px solid currentColor; flex-shrink: 0; transition: background 0.15s; }
+.class-toggle.active .tog-dot { background: currentColor; }
+.class-level-badge { font-size: 11px; color: var(--text-dim); margin-left: 1px; }
+.class-toggle.active .class-level-badge { color: inherit; opacity: 0.7; }
+
+/* Pin-Job-Auswahl (Sub-100-Modus) */
+.pin-section { margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--border); }
+.pin-section-title { font-family: 'Josefin Sans', sans-serif; font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--gold-dim); margin-bottom: 12px; }
+.pin-grid { display: flex; flex-wrap: wrap; gap: 7px; }
+.pin-chip {
+  display: flex; align-items: center; gap: 7px;
+  padding: 6px 12px; border: 1px solid var(--border); border-radius: var(--radius);
+  cursor: pointer; background: var(--bg);
+  font-family: 'Josefin Sans', sans-serif; font-size: 13px; color: var(--text-dim);
+  transition: all 0.15s; user-select: none;
+}
+.pin-chip:hover { border-color: var(--border-bright); color: var(--text); }
+.pin-chip.pinned { border-color: var(--gold); color: var(--gold-light); background: #1e1a0e; }
+.pin-chip .pin-icon { font-size: 12px; }
+.pin-chip.pinned .pin-icon::before { content: '📌'; }
+.pin-chip:not(.pinned) .pin-icon::before { content: '·'; font-size: 16px; line-height: 1; }
+
+.session-ban-info { font-size: 14px; color: var(--text-dim); font-style: italic; margin-bottom: 18px; }
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+  .content-type-grid { grid-template-columns: 1fr 1fr; }
+  .party-row { grid-template-columns: 1fr; }
+  .party-row-name { border-right: none; border-bottom: 1px solid var(--border); }
+  .class-sub { display: none; }
+  .editor-tabs { flex-wrap: wrap; }
+}
+</style>
+</head>
+<body>
+
+<!-- Lade-Overlay -->
+<div id="loadingOverlay">
+  <div class="spin"></div>
+  <p>Verbinde mit Firebase …</p>
+</div>
+
+<div class="page">
+  <header>
+    <div class="header-ornament">
+      <div class="ornament-line"></div>
+      <div class="ornament-diamond"></div>
+      <div class="ornament-line right"></div>
+    </div>
+    <h1>FFXIV Party Randomizer</h1>
+    <p class="subtitle">Wähle den Inhalt · Stelle die Gruppe zusammen · Lass das Schicksal entscheiden</p>
+  </header>
+
+  <!-- 1. Inhaltstyp -->
+  <div class="section-title">Inhaltstyp wählen</div>
+  <div class="content-type-grid" id="contentTypeGrid"></div>
+
+  <!-- 2. Spieler -->
+  <div class="section-title">Spieler auswählen</div>
+  <div class="selection-info">
+    <div class="selection-count"><span id="count">0</span> Spieler ausgewählt</div>
+    <div class="selection-needed" id="neededHint"></div>
+  </div>
+  <div class="player-grid" id="playerGrid"></div>
+  <button class="manage-btn" onclick="openManageModal()">✦ Spielerliste verwalten ✦</button>
+
+  <!-- Fehler -->
+  <div class="error-msg" id="errorMsg"></div>
+
+  <!-- Button -->
+  <div class="btn-wrap">
+    <button class="btn-randomize" id="rollBtn" onclick="rollClasses()">
+      <span class="btn-corner tl"></span><span class="btn-corner tr"></span>
+      <span class="btn-corner bl"></span><span class="btn-corner br"></span>
+      ✦ &nbsp; Klassen auswürfeln &nbsp; ✦
+    </button>
+  </div>
+
+  <!-- Ergebnisse -->
+  <div class="results" id="results">
+    <div class="results-divider"><div class="results-divider-text">— Gruppenzusammenstellung —</div></div>
+    <div class="party-list" id="partyList"></div>
+  </div>
+</div>
+
+<!-- ══ MODAL: Spieler-Editor ══ -->
+<div class="modal-overlay" id="playerEditorOverlay">
+  <div class="modal wide">
+    <div class="player-editor-header">
+      <div class="player-editor-name" id="pePlayerName"></div>
+      <div class="lodestone-row">
+        <input type="text" id="peLodestonId" placeholder="Lodestone-ID (z.B. 30287690)" maxlength="20">
+        <button class="btn-small" id="peFetchBtn" onclick="fetchLodestone()">Jobs von Lodestone laden</button>
+      </div>
+      <div class="lodestone-status" id="peStatus"></div>
+      <div class="level-toggle-row">
+        <label class="toggle-switch">
+          <input type="checkbox" id="peAllowSubMax" onchange="renderClassToggles()">
+          <div class="toggle-track"></div>
+          <div class="toggle-thumb"></div>
+        </label>
+        <span>Jobs unter Level 100 erlauben (z.B. zum Aufleveln)</span>
+      </div>
+    </div>
+
+    <div class="editor-tabs">
+      <div class="editor-tab active"  onclick="switchTab('spielbar')">Spielbare Jobs</div>
+      <div class="editor-tab"         onclick="switchTab('banned')">Dauerhaft gesperrt</div>
+      <div class="editor-tab"         onclick="switchTab('session')">Session-Sperre</div>
+    </div>
+
+    <div class="editor-panel active" id="tabSpielbar">
+      <p class="modal-sub">Aktiviere alle Jobs, die diese Person spielen kann. Wenn eine Lodestone-ID hinterlegt ist, werden Level-100-Jobs automatisch gesetzt.</p>
+      <div id="peClassGroups"></div>
+      <!-- Pin-Sektion (nur bei allowSubMax) -->
+      <div id="pePinSection" style="display:none">
+        <div class="pin-section">
+          <div class="pin-section-title">Job festpinnen (wird garantiert zugewiesen)</div>
+          <p class="modal-sub" style="margin-bottom:14px">Optional: Einen Job pinnen, den diese Person auf jeden Fall spielen soll – der Rest der Gruppe wird weiter gewürfelt.</p>
+          <div class="pin-grid" id="pePinGrid"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="editor-panel" id="tabBanned">
+      <p class="modal-sub">Diese Jobs werden dauerhaft nie zugewiesen – egal wie viele Personen teilnehmen. Ideal für Main-Klassen.</p>
+      <div id="peBannedGroups"></div>
+    </div>
+
+    <div class="editor-panel" id="tabSession">
+      <p class="session-ban-info">Session-Sperren gelten nur für den nächsten Würfelvorgang und werden nicht dauerhaft gespeichert.</p>
+      <div id="peSessionGroups"></div>
+    </div>
+
+    <div class="modal-buttons">
+      <button class="modal-btn cancel" onclick="closePlayerEditor()">Abbrechen</button>
+      <button class="modal-btn save"   onclick="savePlayerEditor()">Speichern</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: Spielerliste verwalten ══ -->
+<div class="modal-overlay" id="manageOverlay">
+  <div class="modal">
+    <h2>Spielerliste verwalten</h2>
+    <p class="modal-sub">Ein Name pro Zeile. Neue Namen erhalten automatisch einen leeren Datensatz.</p>
+    <textarea id="manageTextarea"></textarea>
+    <div class="modal-buttons">
+      <button class="modal-btn cancel" onclick="closeManageModal()">Abbrechen</button>
+      <button class="modal-btn save"   onclick="saveManageModal()">Speichern</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+// ══════════════════════════════════════════════════════════════
+// FIREBASE
+// ══════════════════════════════════════════════════════════════
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+import { getFirestore, doc, getDoc, setDoc }
+  from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDst5oDqUpMPPR5XLTYc7uDA1KJc2_AnVM",
+  authDomain: "fatality-randomizer.firebaseapp.com",
+  projectId: "fatality-randomizer",
+  storageBucket: "fatality-randomizer.firebasestorage.app",
+  messagingSenderId: "409557149919",
+  appId: "1:409557149919:web:21e1d5bb23a237efab216a"
+};
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
+
+// ══════════════════════════════════════════════════════════════
+// KLASSEN-DATEN
+// ══════════════════════════════════════════════════════════════
+const CLASS_DATA = {
+  "Paladin":    { role:"Tank",  sub:"Tank" },
+  "Warrior":    { role:"Tank",  sub:"Tank" },
+  "Gunbreaker": { role:"Tank",  sub:"Tank" },
+  "Darkknight": { role:"Tank",  sub:"Tank" },
+  "Whitemage":  { role:"Heal",  sub:"Pure Heal" },
+  "Astro":      { role:"Heal",  sub:"Pure Heal" },
+  "Scholar":    { role:"Heal",  sub:"Shield Heal" },
+  "Sage":       { role:"Heal",  sub:"Shield Heal" },
+  "Monk":       { role:"DPS",   sub:"Melee" },
+  "Dragoon":    { role:"DPS",   sub:"Melee" },
+  "Ninja":      { role:"DPS",   sub:"Melee" },
+  "Samurai":    { role:"DPS",   sub:"Melee" },
+  "Reaper":     { role:"DPS",   sub:"Melee" },
+  "Viper":      { role:"DPS",   sub:"Melee" },
+  "Barde":      { role:"DPS",   sub:"Phys. Range" },
+  "Maschi":     { role:"DPS",   sub:"Phys. Range" },
+  "Dancer":     { role:"DPS",   sub:"Phys. Range" },
+  "Blackmage":  { role:"DPS",   sub:"Mag. Range" },
+  "Redmage":    { role:"DPS",   sub:"Mag. Range" },
+  "Summoner":   { role:"DPS",   sub:"Mag. Range" },
+  "Picto":      { role:"DPS",   sub:"Mag. Range" },
+};
+
+const XIVAPI_JOB_MAP = {
+  "Paladin":"Paladin","Warrior":"Warrior","Dark Knight":"Darkknight","Gunbreaker":"Gunbreaker",
+  "White Mage":"Whitemage","Astrologian":"Astro","Scholar":"Scholar","Sage":"Sage",
+  "Monk":"Monk","Dragoon":"Dragoon","Ninja":"Ninja","Samurai":"Samurai",
+  "Reaper":"Reaper","Viper":"Viper",
+  "Bard":"Barde","Machinist":"Maschi","Dancer":"Dancer",
+  "Black Mage":"Blackmage","Red Mage":"Redmage","Summoner":"Summoner","Pictomancer":"Picto",
+};
+
+const CLASS_GROUPS = [
+  { key:"tank",   label:"Tank",           classes:["Paladin","Warrior","Gunbreaker","Darkknight"] },
+  { key:"pure",   label:"Pure Heal",      classes:["Whitemage","Astro"] },
+  { key:"shield", label:"Shield Heal",    classes:["Scholar","Sage"] },
+  { key:"melee",  label:"Melee DPS",      classes:["Monk","Dragoon","Ninja","Samurai","Reaper","Viper"] },
+  { key:"phys",   label:"Physical Range", classes:["Barde","Maschi","Dancer"] },
+  { key:"magic",  label:"Magical Range",  classes:["Blackmage","Redmage","Summoner","Picto"] },
+];
+
+const ALL_CLASSES = CLASS_GROUPS.flatMap(g => g.classes);
+
+// ══════════════════════════════════════════════════════════════
+// INHALTSTYPEN
+// ══════════════════════════════════════════════════════════════
+const CONTENT_TYPES = [
+  {
+    id:"four", name:"4-Mann Daily",
+    slots:[{role:"Tank",sub:null},{role:"Heal",sub:null},{role:"DPS",sub:null},{role:"DPS",sub:null}],
+    pills:[{cls:"tank",label:"1× Tank"},{cls:"heal",label:"1× Heiler"},{cls:"dps",label:"2× DPS"}]
+  },
+  {
+    id:"eight", name:"8-Mann Daily",
+    slots:[
+      {role:"Tank",sub:null},{role:"Tank",sub:null},
+      {role:"Heal",sub:null},{role:"Heal",sub:null},
+      {role:"DPS",sub:null},{role:"DPS",sub:null},{role:"DPS",sub:null},{role:"DPS",sub:null}
+    ],
+    pills:[{cls:"tank",label:"2× Tank"},{cls:"heal",label:"2× Heiler"},{cls:"dps",label:"4× DPS"}]
+  },
+  {
+    id:"alliance", name:"Allianz-Raid (8er)",
+    slots:[
+      {role:"Tank",sub:null},
+      {role:"Heal",sub:null},{role:"Heal",sub:null},
+      {role:"DPS",sub:null},{role:"DPS",sub:null},{role:"DPS",sub:null},{role:"DPS",sub:null},{role:"DPS",sub:null}
+    ],
+    pills:[{cls:"tank",label:"1× Tank"},{cls:"heal",label:"2× Heiler"},{cls:"dps",label:"5× DPS"}]
+  },
+  {
+    id:"savage", name:"Schwerer Inhalt",
+    slots:[
+      {role:"Tank",sub:null},{role:"Tank",sub:null},
+      {role:"Heal",sub:"Pure Heal"},{role:"Heal",sub:"Shield Heal"},
+      {role:"DPS",sub:"Melee"},{role:"DPS",sub:"Melee"},
+      {role:"DPS",sub:"Phys. Range"},{role:"DPS",sub:"Mag. Range"}
+    ],
+    pills:[
+      {cls:"tank",label:"2× Tank"},{cls:"pure",label:"1× Pure Heal"},
+      {cls:"shield",label:"1× Shield Heal"},{cls:"melee",label:"2× Melee"},
+      {cls:"phys",label:"1× Phys. Range"},{cls:"magic",label:"1× Mag. Range"}
+    ]
+  },
+];
+
+// ══════════════════════════════════════════════════════════════
+// ZUSTAND
+// ══════════════════════════════════════════════════════════════
+let allPlayers       = {};
+let selectedPlayers  = [];
+let currentContentType = CONTENT_TYPES[1];
+let sessionBans      = {}; // name -> Set
+let sessionPins      = {}; // name -> string|null (gepinnter Job für diese Session)
+
+// Player-Editor-Zustand
+let pePlayer        = null;
+let peClasses       = new Set();
+let peBanned        = new Set();
+let peSessionBanned = new Set();
+let peSessionPin    = null;
+let peAllowSubMax   = false;
+let peJobLevels     = {};
+let peLodestoneId   = "";
+
+// ══════════════════════════════════════════════════════════════
+// FIREBASE
+// ══════════════════════════════════════════════════════════════
+const FB_DOC = doc(db, "randomizer", "players");
+
+async function loadFromFirebase() {
+  try {
+    const snap = await getDoc(FB_DOC);
+    if (snap.exists()) {
+      allPlayers = snap.data().players || {};
+    } else {
+      allPlayers = buildDefaultPlayers();
+      await saveToFirebase();
+    }
+  } catch(e) {
+    console.error("Firebase Ladefehler:", e);
+    allPlayers = buildDefaultPlayers();
+  }
+  document.getElementById('loadingOverlay').classList.add('hidden');
+  renderContentTypes();
+  renderPlayerGrid();
+}
+
+async function saveToFirebase() {
+  try { await setDoc(FB_DOC, { players: allPlayers }); }
+  catch(e) { console.error("Firebase Speicherfehler:", e); }
+}
+
+// ══════════════════════════════════════════════════════════════
+// STANDARDSPIELER
+// ══════════════════════════════════════════════════════════════
+function buildDefaultPlayers() {
+  const defaults = {
+    "Alassera": ["Paladin","Gunbreaker","Astro","Ninja","Viper"],
+    "Aura":     ["Astro","Scholar","Paladin","Gunbreaker","Darkknight","Monk","Dragoon","Ninja","Samurai","Reaper","Viper","Barde","Maschi","Blackmage","Redmage","Summoner"],
+    "Dennis":   ["Warrior","Gunbreaker","Whitemage","Scholar","Monk","Dragoon","Samurai","Reaper","Viper","Barde","Maschi","Dancer","Redmage","Summoner","Picto"],
+    "Dom":      ["Darkknight","Gunbreaker","Scholar","Barde","Dancer","Summoner"],
+    "Nightcore":["Astro","Redmage","Viper"],
+    "Poly":     ["Warrior","Ninja","Samurai","Maschi","Summoner","Picto"],
+    "Rikez":    ["Astro","Scholar","Gunbreaker","Paladin","Dragoon","Ninja","Maschi","Dancer","Blackmage","Picto"],
+    "Rin":      ["Paladin","Warrior","Scholar","Astro","Reaper","Viper","Barde","Maschi","Dancer","Blackmage","Redmage","Picto"],
+    "Sadia":    ["Scholar","Paladin","Warrior","Darkknight","Gunbreaker","Monk","Dragoon","Ninja","Samurai","Viper","Barde","Maschi","Blackmage","Redmage","Summoner","Picto"],
+    "Save":     ["Paladin","Darkknight","Gunbreaker","Scholar","Astro","Monk","Dragoon","Ninja","Reaper","Viper"],
+    "Tara":     ["Darkknight","Gunbreaker","Scholar","Astro","Sage","Dragoon","Barde","Maschi","Blackmage","Redmage","Summoner","Picto"],
+    "Tim":      ["Whitemage","Astro","Scholar","Gunbreaker","Darkknight","Monk","Dragoon","Ninja","Reaper","Barde","Maschi","Blackmage","Redmage","Summoner","Picto"],
+    "Viola":    ["Paladin","Warrior","Darkknight","Gunbreaker","Scholar","Astro","Sage","Monk","Dragoon","Ninja","Samurai","Reaper","Viper","Dancer","Blackmage","Summoner","Redmage","Picto"],
+  };
+  const result = {};
+  for (const [name, classes] of Object.entries(defaults)) {
+    result[name] = { lodestoneId:"", allowSubMax:false, classes, banned:[], jobLevels:{} };
+  }
+  return result;
+}
+
+// ══════════════════════════════════════════════════════════════
+// XIVAPI
+// ══════════════════════════════════════════════════════════════
+async function fetchLodestone() {
+  const id = document.getElementById('peLodestonId').value.trim();
+  if (!id) { setStatus("Bitte eine Lodestone-ID eingeben.", "err"); return; }
+  setStatus("Lade Daten von XIVAPI …", "");
+  document.getElementById('peFetchBtn').disabled = true;
+  try {
+    const resp = await fetch(`https://xivapi.com/character/${id}?columns=ClassJobs`);
+    if (!resp.ok) throw new Error("HTTP-Fehler " + resp.status);
+    const data = await resp.json();
+    if (!data.ClassJobs) throw new Error("Keine Job-Daten gefunden.");
+
+    const levels = {};
+    for (const job of data.ClassJobs) {
+      const name = XIVAPI_JOB_MAP[job.UnlockedState?.Name] || XIVAPI_JOB_MAP[job.Job?.Name];
+      if (name && job.Level > 0) levels[name] = job.Level;
+    }
+    peJobLevels = levels;
+    peLodestoneId = id;
+
+    // Automatisch alle Level-100-Jobs als spielbar setzen
+    peClasses = new Set(Object.entries(levels).filter(([,lv])=>lv>=100).map(([n])=>n));
+    renderClassToggles();
+    const count100 = peClasses.size;
+    setStatus(`✓ Jobs geladen – ${count100} Jobs auf Level 100 automatisch aktiviert.`, "ok");
+  } catch(e) {
+    setStatus("Fehler: " + e.message, "err");
+  }
+  document.getElementById('peFetchBtn').disabled = false;
+}
+
+function setStatus(msg, type) {
+  const el = document.getElementById('peStatus');
+  el.textContent = msg;
+  el.className = "lodestone-status" + (type ? " "+type : "");
+}
+
+// ══════════════════════════════════════════════════════════════
+// INHALTSTYPEN
+// ══════════════════════════════════════════════════════════════
+function renderContentTypes() {
+  const grid = document.getElementById('contentTypeGrid');
+  grid.innerHTML = '';
+  CONTENT_TYPES.forEach(ct => {
+    const card = document.createElement('div');
+    card.className = 'content-type-card' + (ct.id === currentContentType.id ? ' selected' : '');
+    card.innerHTML = `<div class="content-type-name">${ct.name}</div>
+      <div class="content-type-slots">${ct.pills.map(p=>`<span class="pill ${p.cls}">${p.label}</span>`).join('')}</div>`;
+    card.onclick = () => {
+      currentContentType = ct;
+      // Zu viele Spieler abwählen
+      const max = ct.slots.length;
+      if (selectedPlayers.length > max) selectedPlayers = selectedPlayers.slice(0, max);
+      renderContentTypes();
+      renderPlayerGrid();
+      document.getElementById('results').classList.remove('visible');
+    };
+    grid.appendChild(card);
+  });
+  updateNeededHint();
+}
+
+function updateNeededHint() {
+  const max = currentContentType.slots.length;
+  document.getElementById('neededHint').textContent = `Max. ${max} Spieler für diesen Inhalt`;
+}
+
+// ══════════════════════════════════════════════════════════════
+// SPIELER-GRID (alphabetisch)
+// ══════════════════════════════════════════════════════════════
+function renderPlayerGrid() {
+  const grid = document.getElementById('playerGrid');
+  grid.innerHTML = '';
+  // Alphabetisch sortieren
+  const sorted = Object.keys(allPlayers).sort((a,b) => a.localeCompare(b, 'de'));
+  sorted.forEach(name => {
+    const chip = document.createElement('div');
+    chip.className = 'player-chip' + (selectedPlayers.includes(name) ? ' selected' : '');
+    chip.innerHTML = `<div class="check"></div><span class="chip-name">${name}</span><span class="edit-icon" title="Bearbeiten">✎</span>`;
+    chip.addEventListener('click', e => {
+      if (e.target.classList.contains('edit-icon')) { e.stopPropagation(); openPlayerEditor(name); }
+      else togglePlayer(name, chip);
+    });
+    grid.appendChild(chip);
+  });
+  document.getElementById('count').textContent = selectedPlayers.length;
+}
+
+function togglePlayer(name, chip) {
+  const max = currentContentType.slots.length;
+  const idx = selectedPlayers.indexOf(name);
+  if (idx > -1) {
+    selectedPlayers.splice(idx, 1);
+    chip.classList.remove('selected');
+  } else {
+    if (selectedPlayers.length >= max) { showError(`Maximal ${max} Spieler für diesen Inhalt.`); return; }
+    selectedPlayers.push(name);
+    chip.classList.add('selected');
+  }
+  clearError();
+  document.getElementById('count').textContent = selectedPlayers.length;
+  document.getElementById('results').classList.remove('visible');
+}
+
+// ══════════════════════════════════════════════════════════════
+// PLAYER-EDITOR
+// ══════════════════════════════════════════════════════════════
+function openPlayerEditor(name) {
+  pePlayer        = name;
+  const p         = allPlayers[name] || {};
+  peClasses       = new Set(p.classes || []);
+  peBanned        = new Set(p.banned  || []);
+  peSessionBanned = new Set(sessionBans[name] || []);
+  peSessionPin    = sessionPins[name] || null;
+  peAllowSubMax   = p.allowSubMax || false;
+  peJobLevels     = p.jobLevels   || {};
+  peLodestoneId   = p.lodestoneId || "";
+
+  document.getElementById('pePlayerName').textContent  = name;
+  document.getElementById('peLodestonId').value        = peLodestoneId;
+  document.getElementById('peAllowSubMax').checked     = peAllowSubMax;
+  document.getElementById('peStatus').textContent      = "";
+  document.getElementById('peStatus').className        = "lodestone-status";
+
+  switchTab('spielbar');
+  document.getElementById('playerEditorOverlay').classList.add('open');
+}
+
+function closePlayerEditor() {
+  document.getElementById('playerEditorOverlay').classList.remove('open');
+}
+
+async function savePlayerEditor() {
+  if (!pePlayer) return;
+  peLodestoneId = document.getElementById('peLodestonId').value.trim();
+  peAllowSubMax = document.getElementById('peAllowSubMax').checked;
+  allPlayers[pePlayer] = {
+    lodestoneId: peLodestoneId,
+    allowSubMax: peAllowSubMax,
+    classes:     Array.from(peClasses),
+    banned:      Array.from(peBanned),
+    jobLevels:   peJobLevels,
+  };
+  sessionBans[pePlayer] = Array.from(peSessionBanned);
+  sessionPins[pePlayer] = peSessionPin;
+  await saveToFirebase();
+  closePlayerEditor();
+  renderPlayerGrid();
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.editor-tab').forEach((el,i) => {
+    el.classList.toggle('active', ['spielbar','banned','session'][i] === tab);
+  });
+  ['Spielbar','Banned','Session'].forEach(t => {
+    const el = document.getElementById('tab'+t);
+    if (el) el.classList.toggle('active', t.toLowerCase() === tab);
+  });
+  renderClassToggles();
+}
+
+function renderClassToggles() {
+  const allowSub = document.getElementById('peAllowSubMax').checked;
+  peAllowSubMax  = allowSub;
+
+  // ── Spielbare Jobs ──
+  renderToggleGroup('peClassGroups', (cls, grpKey) => {
+    const lv   = peJobLevels[cls];
+    const show = (lv === undefined) || lv >= 100 || allowSub;
+    if (!show) return null;
+    const active   = peClasses.has(cls);
+    const lvBadge  = lv !== undefined ? `<span class="class-level-badge">Lv${lv}</span>` : '';
+    return {
+      active, grpKey,
+      html: `<div class="tog-dot"></div>${cls}${lvBadge}`,
+      onToggle: on => { on ? peClasses.add(cls) : peClasses.delete(cls); renderPinGrid(); }
+    };
+  });
+
+  // ── Pin-Grid (Sub-100-Modus) ──
+  const pinSection = document.getElementById('pePinSection');
+  pinSection.style.display = allowSub ? 'block' : 'none';
+  if (allowSub) renderPinGrid();
+
+  // ── Dauerhaft gesperrt ──
+  renderToggleGroup('peBannedGroups', (cls, grpKey) => ({
+    active: peBanned.has(cls), grpKey,
+    html: `<div class="tog-dot"></div>${cls}`,
+    onToggle: on => { on ? peBanned.add(cls) : peBanned.delete(cls); }
+  }));
+
+  // ── Session-Sperre ──
+  renderToggleGroup('peSessionGroups', (cls, grpKey) => ({
+    active: peSessionBanned.has(cls), grpKey,
+    html: `<div class="tog-dot"></div>${cls}`,
+    onToggle: on => { on ? peSessionBanned.add(cls) : peSessionBanned.delete(cls); }
+  }));
+}
+
+function renderPinGrid() {
+  const grid = document.getElementById('pePinGrid');
+  if (!grid) return;
+  grid.innerHTML = '';
+
+  // Nur aktive Klassen zeigen
+  const active = Array.from(peClasses).sort();
+  if (active.length === 0) {
+    grid.innerHTML = '<span style="color:var(--text-dim);font-size:13px;font-style:italic">Keine spielbaren Jobs aktiv.</span>';
+    return;
+  }
+
+  // "Keinen pinnen" Option
+  const noneChip = document.createElement('div');
+  noneChip.className = 'pin-chip' + (!peSessionPin ? ' pinned' : '');
+  noneChip.innerHTML = `<span class="pin-icon"></span>Keinen (zufällig)`;
+  noneChip.onclick = () => { peSessionPin = null; renderPinGrid(); };
+  grid.appendChild(noneChip);
+
+  active.forEach(cls => {
+    const chip = document.createElement('div');
+    chip.className = 'pin-chip' + (peSessionPin === cls ? ' pinned' : '');
+    const grpKey = CLASS_GROUPS.find(g=>g.classes.includes(cls))?.key || '';
+    chip.innerHTML = `<span class="pin-icon"></span>${cls}`;
+    chip.onclick = () => { peSessionPin = (peSessionPin === cls) ? null : cls; renderPinGrid(); };
+    grid.appendChild(chip);
+  });
+}
+
+function renderToggleGroup(containerId, getConfig) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  container.innerHTML = '';
+  CLASS_GROUPS.forEach(group => {
+    const toggles = [];
+    group.classes.forEach(cls => {
+      const cfg = getConfig(cls, group.key);
+      if (!cfg) return;
+      const tog = document.createElement('div');
+      tog.className = 'class-toggle' + (cfg.active ? ` active ${cfg.grpKey}` : '');
+      tog.innerHTML  = cfg.html;
+      tog.onclick = () => {
+        const nowActive = !tog.classList.contains('active');
+        if (nowActive) tog.classList.add('active', cfg.grpKey);
+        else           tog.classList.remove('active', cfg.grpKey);
+        cfg.onToggle(nowActive);
+      };
+      toggles.push(tog);
+    });
+    if (!toggles.length) return;
+    const groupEl = document.createElement('div');
+    groupEl.className = 'class-editor-group';
+    groupEl.innerHTML = `<div class="class-editor-group-title ${group.key}">${group.label}</div>`;
+    const gridEl = document.createElement('div');
+    gridEl.className = 'class-checkbox-grid';
+    toggles.forEach(t => gridEl.appendChild(t));
+    groupEl.appendChild(gridEl);
+    container.appendChild(groupEl);
+  });
+}
+
+// ══════════════════════════════════════════════════════════════
+// SPIELERLISTE VERWALTEN
+// ══════════════════════════════════════════════════════════════
+function openManageModal() {
+  // Alphabetisch im Textarea
+  const sorted = Object.keys(allPlayers).sort((a,b)=>a.localeCompare(b,'de'));
+  document.getElementById('manageTextarea').value = sorted.join('\n');
+  document.getElementById('manageOverlay').classList.add('open');
+}
+function closeManageModal() { document.getElementById('manageOverlay').classList.remove('open'); }
+async function saveManageModal() {
+  const names = document.getElementById('manageTextarea').value
+    .split('\n').map(n=>n.trim()).filter(Boolean);
+  const next  = {};
+  names.forEach(name => {
+    next[name] = allPlayers[name] || { lodestoneId:"", allowSubMax:false, classes:[], banned:[], jobLevels:{} };
+  });
+  allPlayers      = next;
+  selectedPlayers = selectedPlayers.filter(p => allPlayers[p]);
+  await saveToFirebase();
+  closeManageModal();
+  renderPlayerGrid();
+}
+
+// ══════════════════════════════════════════════════════════════
+// WÜRFELN – Slot-Verteilung bei Unterbesetzung
+// ══════════════════════════════════════════════════════════════
+function pickSlotsForPlayerCount(allSlots, n) {
+  if (n >= allSlots.length) return [...allSlots];
+
+  // Rollen zählen
+  const byRole = {};
+  allSlots.forEach(s => { byRole[s.role] = (byRole[s.role]||[]).concat(s); });
+
+  // Proportional verteilen: für jeden Slot einen "Gewicht"-Score
+  // Einfachste faire Methode: Runden-Robin über Rollen
+  const roles = Object.keys(byRole);
+  const pointers = {};
+  roles.forEach(r => pointers[r] = 0);
+
+  const picked = [];
+  let i = 0;
+  while (picked.length < n) {
+    const role = roles[i % roles.length];
+    const arr  = byRole[role];
+    const ptr  = pointers[role];
+    if (ptr < arr.length) {
+      picked.push(arr[ptr]);
+      pointers[role]++;
+    }
+    i++;
+    // Sicherheitsabbruch falls nicht genug Slots
+    if (i > allSlots.length * 3) break;
+  }
+  return picked;
+}
+
+function classMatchesSlot(cls, slot) {
+  const cd = CLASS_DATA[cls];
+  if (!cd) return false;
+  if (cd.role !== slot.role) return false;
+  if (slot.sub && cd.sub !== slot.sub) return false;
+  return true;
+}
+
+function getEligibleClasses(name, slot) {
+  const p       = allPlayers[name] || {};
+  const banned  = new Set(p.banned || []);
+  const session = new Set(sessionBans[name] || []);
+  const allowSub = p.allowSubMax || false;
+  const levels  = p.jobLevels || {};
+  return (p.classes || []).filter(cls => {
+    if (!classMatchesSlot(cls, slot)) return false;
+    if (banned.has(cls))  return false;
+    if (session.has(cls)) return false;
+    const lv = levels[cls];
+    if (lv !== undefined && lv < 100 && !allowSub) return false;
+    return true;
+  });
+}
+
+function rollClasses() {
+  clearError();
+  const players = [...selectedPlayers];
+  if (players.length === 0) { showError('Bitte mindestens einen Spieler auswählen.'); return; }
+
+  const allSlots  = currentContentType.slots;
+  const usedSlots = pickSlotsForPlayerCount(allSlots, players.length);
+
+  // Gepinnte Jobs vorab festlegen
+  const pins = {};
+  players.forEach(name => {
+    const pin = sessionPins[name];
+    if (pin) pins[name] = pin;
+  });
+
+  const result = assignClasses(players, usedSlots, pins);
+  if (!result) return;
+
+  // Nicht besetzte Slots
+  const pickedSlotSet = new Set(usedSlots.map((_,i)=>i).map(i=>usedSlots[i]));
+  const externSlots   = allSlots.filter(s => !usedSlots.includes(s));
+
+  renderResults(result, externSlots);
+}
+
+function assignClasses(players, slots, pins) {
+  // Spieler mit Pin zuerst platzieren
+  for (let attempt = 0; attempt < 400; attempt++) {
+    const tryPlayers = shuffle([...players]);
+    const trySlots   = shuffle([...slots]);
+    const result     = backtrack(tryPlayers, trySlots, {}, new Set(), pins);
+    if (result) return result;
+  }
+  showError('Keine gültige Verteilung gefunden – Klassenlisten prüfen oder andere Spieler auswählen.');
+  return null;
+}
+
+function backtrack(players, slots, assignment, usedClasses, pins) {
+  if (players.length === 0) return assignment;
+  const player      = players[0];
+  const restPlayers = players.slice(1);
+  const freeIndices = slots.map((_,i)=>i).filter(i=>!(i in assignment));
+  const pinnedClass = pins[player] || null;
+
+  for (const slotIdx of shuffle(freeIndices)) {
+    const slot     = slots[slotIdx];
+    // Wenn Pin gesetzt: nur diesen Job versuchen, sofern er auf den Slot passt
+    let eligible;
+    if (pinnedClass) {
+      eligible = classMatchesSlot(pinnedClass, slot) && !usedClasses.has(pinnedClass)
+        ? [pinnedClass] : [];
+    } else {
+      eligible = getEligibleClasses(player, slot).filter(c => !usedClasses.has(c));
+    }
+    for (const cls of shuffle(eligible)) {
+      const newAssignment = { ...assignment, [slotIdx]: { player, class: cls } };
+      const newUsed       = new Set(usedClasses); newUsed.add(cls);
+      const res           = backtrack(restPlayers, slots, newAssignment, newUsed, pins);
+      if (res) return res;
+    }
+  }
+  return null;
+}
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length-1; i > 0; i--) {
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+// ══════════════════════════════════════════════════════════════
+// ERGEBNISSE
+// ══════════════════════════════════════════════════════════════
+function renderResults(assignment, externSlots) {
+  const list = document.getElementById('partyList');
+  list.innerHTML = '';
+  const order = { Tank:0, Heal:1, DPS:2 };
+
+  const entries = Object.values(assignment).sort((a,b) => {
+    const ra = CLASS_DATA[a.class]?.role||'DPS';
+    const rb = CLASS_DATA[b.class]?.role||'DPS';
+    return (order[ra]??3)-(order[rb]??3);
+  });
+
+  entries.forEach((entry, idx) => {
+    const cd        = CLASS_DATA[entry.class]||{role:'DPS',sub:''};
+    const row       = document.createElement('div');
+    row.className   = `party-row role-${cd.role.toLowerCase()}`;
+    row.style.animationDelay = `${idx*55}ms`;
+    const pinMark = sessionPins[entry.player] === entry.class ? ' 📌' : '';
+    row.innerHTML = `
+      <div class="party-row-name">${entry.player}</div>
+      <div class="party-row-class">
+        <div class="class-role-dot"></div>
+        <div class="class-name">${entry.class}${pinMark}</div>
+        <div class="class-sub">${cd.sub}</div>
+      </div>`;
+    list.appendChild(row);
+  });
+
+  externSlots.forEach((slot, idx) => {
+    const label = slot.sub ? `${slot.role} (${slot.sub})` : slot.role;
+    const row   = document.createElement('div');
+    row.className = 'party-row role-extern';
+    row.style.animationDelay = `${(entries.length+idx)*55}ms`;
+    row.innerHTML = `
+      <div class="party-row-name" style="color:var(--extern);font-style:italic">Extern</div>
+      <div class="party-row-class">
+        <div class="class-role-dot"></div>
+        <div class="class-name">${label}</div>
+        <div class="class-sub">wird extern aufgefüllt</div>
+      </div>`;
+    list.appendChild(row);
+  });
+
+  document.getElementById('results').classList.add('visible');
+  document.getElementById('results').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+// ══════════════════════════════════════════════════════════════
+// FEHLER
+// ══════════════════════════════════════════════════════════════
+function showError(msg) { document.getElementById('errorMsg').textContent = msg; }
+function clearError()   { document.getElementById('errorMsg').textContent = ''; }
+
+// ══════════════════════════════════════════════════════════════
+// MODAL-SCHLIESSEN
+// ══════════════════════════════════════════════════════════════
+document.getElementById('playerEditorOverlay').addEventListener('click', e => { if(e.target===e.currentTarget) closePlayerEditor(); });
+document.getElementById('manageOverlay').addEventListener('click', e => { if(e.target===e.currentTarget) closeManageModal(); });
+
+// ══════════════════════════════════════════════════════════════
+// GLOBALE FUNKTIONEN
+// ══════════════════════════════════════════════════════════════
+window.openManageModal   = openManageModal;
+window.closeManageModal  = closeManageModal;
+window.saveManageModal   = saveManageModal;
+window.openPlayerEditor  = openPlayerEditor;
+window.closePlayerEditor = closePlayerEditor;
+window.savePlayerEditor  = savePlayerEditor;
+window.fetchLodestone    = fetchLodestone;
+window.switchTab         = switchTab;
+window.rollClasses       = rollClasses;
+
+// ══════════════════════════════════════════════════════════════
+// START
+// ══════════════════════════════════════════════════════════════
+loadFromFirebase();
+</script>
+</body>
+</html>
