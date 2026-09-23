@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>FFXIV Party Randomizer</title>
+<title>Fatality Party Randomizer</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Josefin+Sans:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -57,7 +57,7 @@ body::before {
 .page {
   position: relative; z-index: 1;
   max-width: 1020px; margin: 0 auto;
-  padding: 48px 28px 100px;
+  padding: 48px 28px 30px;
 }
 
 /* ── Lade-Overlay ── */
@@ -143,7 +143,7 @@ h1 {
 .player-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(165px, 1fr));
-  gap: 10px; margin-bottom: 14px;
+  gap: 10px; margin-bottom: 25px;
 }
 .player-chip {
   position: relative; background: var(--surface);
@@ -185,7 +185,8 @@ h1 {
 .manage-btn:hover { border-color: var(--border-bright); color: var(--text); }
 
 /* ── Fehler ── */
-.error-msg { text-align: center; color: var(--red); font-size: 16px; margin-bottom: 24px; min-height: 24px; }
+.error-msg { text-align: center; color: var(--red); font-size: 16px; }
+.error-msg:not(:empty) { margin-bottom: 24px; }
 
 /* ── Würfel-Button ── */
 .btn-wrap { text-align: center; margin-bottom: 52px; }
@@ -218,7 +219,7 @@ h1 {
 .results-divider { display: flex; align-items: center; gap: 18px; margin-bottom: 28px; }
 .results-divider::before { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, transparent, var(--border)); }
 .results-divider::after  { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, var(--border), transparent); }
-.results-divider-text { font-family: 'Cinzel', serif; font-size: 12px; letter-spacing: 0.2em; color: var(--text-dim); white-space: nowrap; }
+.results-divider-text { font-family: 'Cinzel', serif; font-size: 14px; letter-spacing: 0.2em; color: var(--text-dim); white-space: nowrap; }
 .party-list { display: flex; flex-direction: column; gap: 9px; }
 .party-row {
   display: grid; grid-template-columns: 180px 1fr;
@@ -278,13 +279,6 @@ h1 {
 /* ── Spieler-Editor ── */
 .player-editor-header { margin-bottom: 24px; }
 .player-editor-name { font-family: 'Cinzel', serif; font-size: 22px; color: var(--gold-light); letter-spacing: 0.1em; margin-bottom: 14px; }
-.lodestone-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; }
-.lodestone-row input {
-  background: var(--bg); border: 1px solid var(--border); color: var(--text);
-  font-family: 'Josefin Sans', sans-serif; font-size: 13px; padding: 8px 12px;
-  border-radius: var(--radius); outline: none; width: 180px; letter-spacing: 0.04em;
-}
-.lodestone-row input:focus { border-color: var(--gold-dim); }
 .btn-small {
   font-family: 'Josefin Sans', sans-serif; font-size: 13px; letter-spacing: 0.02em;
   padding: 8px 14px; border-radius: var(--radius); cursor: pointer; transition: all 0.2s;
@@ -292,9 +286,6 @@ h1 {
 }
 .btn-small:hover { border-color: var(--gold-dim); color: var(--gold-light); }
 .btn-small:disabled { opacity: 0.4; cursor: not-allowed; }
-.lodestone-status { font-size: 13px; font-style: italic; color: var(--text-dim); min-height: 20px; margin-bottom: 14px; }
-.lodestone-status.ok  { color: var(--heal); }
-.lodestone-status.err { color: var(--red); }
 
 /* Level-Toggle */
 .level-toggle-row { display: flex; align-items: center; gap: 12px; font-size: 15px; color: var(--text-dim); margin-bottom: 22px; }
@@ -358,6 +349,12 @@ h1 {
 /* Pin-Job-Auswahl (Sub-100-Modus) */
 .pin-section { margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--border); }
 .pin-section-title { font-family: 'Josefin Sans', sans-serif; font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--gold-dim); margin-bottom: 12px; }
+/* Leveling-Sektion */
+.leveling-section { margin-top: 24px; padding-top: 18px; border-top: 1px dashed var(--border-bright); }
+.leveling-section-title { font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--phys); margin-bottom: 6px; }
+.leveling-section-sub { font-size: 13px; color: var(--text-dim); margin-bottom: 14px; font-style: italic; }
+/* Leveling-Badge im Ergebnis */
+.lv-badge { font-size: 12px; color: var(--phys); margin-left: 6px; font-family: 'Josefin Sans', sans-serif; letter-spacing: 0; }
 .pin-grid { display: flex; flex-wrap: wrap; gap: 7px; }
 .pin-chip {
   display: flex; align-items: center; gap: 7px;
@@ -399,8 +396,8 @@ h1 {
       <div class="ornament-diamond"></div>
       <div class="ornament-line right"></div>
     </div>
-    <h1>FFXIV Party Randomizer</h1>
-    <p class="subtitle">Wähle den Inhalt · Stelle die Gruppe zusammen · Lass das Schicksal entscheiden</p>
+    <h1>Fatality Party Randomizer</h1>
+    <p class="subtitle">Inhalt wählen · Gruppe zusammenstellen · Dulli-Chaos starten</p>
   </header>
 
   <!-- 1. Inhaltstyp -->
@@ -440,47 +437,53 @@ h1 {
   <div class="modal wide">
     <div class="player-editor-header">
       <div class="player-editor-name" id="pePlayerName"></div>
-      <div class="lodestone-row">
-        <input type="text" id="peLodestonId" placeholder="Lodestone-ID (z.B. 30287690)" maxlength="20">
-        <button class="btn-small" id="peFetchBtn" onclick="fetchLodestone()">Jobs von Lodestone laden</button>
-      </div>
-      <div class="lodestone-status" id="peStatus"></div>
       <div class="level-toggle-row">
         <label class="toggle-switch">
-          <input type="checkbox" id="peAllowSubMax" onchange="renderClassToggles()">
+          <input type="checkbox" id="peAllowSubMax">
           <div class="toggle-track"></div>
           <div class="toggle-thumb"></div>
         </label>
-        <span>Jobs unter Level 100 erlauben (z.B. zum Aufleveln)</span>
+        <span>Leveling-Modus – Jobs zum Aufleveln einbeziehen (runterscrollen, wenn aktiviert)</span>
       </div>
     </div>
 
     <div class="editor-tabs">
-      <div class="editor-tab active"  onclick="switchTab('spielbar')">Spielbare Jobs</div>
-      <div class="editor-tab"         onclick="switchTab('banned')">Dauerhaft gesperrt</div>
-      <div class="editor-tab"         onclick="switchTab('session')">Session-Sperre</div>
+      <div class="editor-tab active" id="tabBtn-spielbar" onclick="switchTab('spielbar')">Spielbare Jobs</div>
+      <div class="editor-tab"        id="tabBtn-banned"   onclick="switchTab('banned')">Dauerhaft gesperrt</div>
+      <div class="editor-tab"        id="tabBtn-session"  onclick="switchTab('session')">Session-Sperre</div>
     </div>
 
+    <!-- Tab: Spielbar -->
     <div class="editor-panel active" id="tabSpielbar">
-      <p class="modal-sub">Aktiviere alle Jobs, die diese Person spielen kann. Wenn eine Lodestone-ID hinterlegt ist, werden Level-100-Jobs automatisch gesetzt.</p>
+      <p class="modal-sub">Aktiviere alle Jobs, die du auf Level 100 spielen kannst.</p>
       <div id="peClassGroups"></div>
-      <!-- Pin-Sektion (nur bei allowSubMax) -->
+      <!-- Leveling-Sektion -->
+      <div id="peLevelingSection" style="display:none">
+        <div class="leveling-section">
+          <div class="leveling-section-title">↑ Jobs zum Aufleveln</div>
+          <p class="leveling-section-sub">Diese Jobs kommen zusätzlich in den Würfel-Pool und werden im Ergebnis mit ↑ markiert.</p>
+          <div id="peLevelingGroups"></div>
+        </div>
+      </div>
+      <!-- Pin-Sektion -->
       <div id="pePinSection" style="display:none">
         <div class="pin-section">
           <div class="pin-section-title">Job festpinnen (wird garantiert zugewiesen)</div>
-          <p class="modal-sub" style="margin-bottom:14px">Optional: Einen Job pinnen, den diese Person auf jeden Fall spielen soll – der Rest der Gruppe wird weiter gewürfelt.</p>
+          <p class="modal-sub" style="margin-bottom:14px">Optional: Einen Job pinnen – der Rest der Gruppe wird weiter gewürfelt.</p>
           <div class="pin-grid" id="pePinGrid"></div>
         </div>
       </div>
     </div>
 
+    <!-- Tab: Dauerhaft gesperrt -->
     <div class="editor-panel" id="tabBanned">
-      <p class="modal-sub">Diese Jobs werden dauerhaft nie zugewiesen – egal wie viele Personen teilnehmen. Ideal für Main-Klassen.</p>
+      <p class="modal-sub">Diese Jobs werden nie zugewiesen – ideal für Main-Klassen.</p>
       <div id="peBannedGroups"></div>
     </div>
 
+    <!-- Tab: Session-Sperre -->
     <div class="editor-panel" id="tabSession">
-      <p class="session-ban-info">Session-Sperren gelten nur für den nächsten Würfelvorgang und werden nicht dauerhaft gespeichert.</p>
+      <p class="session-ban-info">Session-Sperren gelten nur für den nächsten Würfelvorgang und werden nicht gespeichert.</p>
       <div id="peSessionGroups"></div>
     </div>
 
@@ -550,14 +553,6 @@ const CLASS_DATA = {
   "Picto":      { role:"DPS",   sub:"Mag. Range" },
 };
 
-const XIVAPI_JOB_MAP = {
-  "Paladin":"Paladin","Warrior":"Warrior","Dark Knight":"Darkknight","Gunbreaker":"Gunbreaker",
-  "White Mage":"Whitemage","Astrologian":"Astro","Scholar":"Scholar","Sage":"Sage",
-  "Monk":"Monk","Dragoon":"Dragoon","Ninja":"Ninja","Samurai":"Samurai",
-  "Reaper":"Reaper","Viper":"Viper",
-  "Bard":"Barde","Machinist":"Maschi","Dancer":"Dancer",
-  "Black Mage":"Blackmage","Red Mage":"Redmage","Summoner":"Summoner","Pictomancer":"Picto",
-};
 
 const CLASS_GROUPS = [
   { key:"tank",   label:"Tank",           classes:["Paladin","Warrior","Gunbreaker","Darkknight"] },
@@ -624,13 +619,12 @@ let sessionPins      = {}; // name -> string|null (gepinnter Job für diese Sess
 
 // Player-Editor-Zustand
 let pePlayer        = null;
-let peClasses       = new Set();
-let peBanned        = new Set();
+let peClasses         = new Set();
+let peLevelingClasses = new Set(); // Jobs zum Aufleveln
+let peBanned          = new Set();
 let peSessionBanned = new Set();
 let peSessionPin    = null;
 let peAllowSubMax   = false;
-let peJobLevels     = {};
-let peLodestoneId   = "";
 
 // ══════════════════════════════════════════════════════════════
 // FIREBASE
@@ -681,51 +675,11 @@ function buildDefaultPlayers() {
   };
   const result = {};
   for (const [name, classes] of Object.entries(defaults)) {
-    result[name] = { lodestoneId:"", allowSubMax:false, classes, banned:[], jobLevels:{} };
+    result[name] = { allowSubMax:false, classes, leveling:[], banned:[] };
   }
   return result;
 }
 
-// ══════════════════════════════════════════════════════════════
-// XIVAPI
-// ══════════════════════════════════════════════════════════════
-async function fetchLodestone() {
-  const id = document.getElementById('peLodestonId').value.trim();
-  if (!id) { setStatus("Bitte eine Lodestone-ID eingeben.", "err"); return; }
-  setStatus("Lade Daten von XIVAPI …", "");
-  document.getElementById('peFetchBtn').disabled = true;
-  try {
-    const resp = await fetch(`https://xivapi.com/character/${id}?columns=ClassJobs`);
-    if (!resp.ok) throw new Error("HTTP-Fehler " + resp.status);
-    const data = await resp.json();
-    if (!data.ClassJobs) throw new Error("Keine Job-Daten gefunden.");
-
-    const levels = {};
-    for (const job of data.ClassJobs) {
-      const name = XIVAPI_JOB_MAP[job.UnlockedState?.Name] || XIVAPI_JOB_MAP[job.Job?.Name];
-      if (name && job.Level > 0) levels[name] = job.Level;
-    }
-    peJobLevels = levels;
-    peLodestoneId = id;
-
-    // Automatisch alle Level-100-Jobs als spielbar setzen
-    peClasses = new Set(Object.entries(levels).filter(([,lv])=>lv>=100).map(([n])=>n));
-    renderClassToggles();
-    const count100 = peClasses.size;
-    setStatus(`✓ Jobs geladen – ${count100} Jobs auf Level 100 automatisch aktiviert.`, "ok");
-  } catch(e) {
-    setStatus("Fehler: " + e.message, "err");
-  }
-  document.getElementById('peFetchBtn').disabled = false;
-}
-
-function setStatus(msg, type) {
-  const el = document.getElementById('peStatus');
-  el.textContent = msg;
-  el.className = "lodestone-status" + (type ? " "+type : "");
-}
-
-// ══════════════════════════════════════════════════════════════
 // INHALTSTYPEN
 // ══════════════════════════════════════════════════════════════
 function renderContentTypes() {
@@ -798,23 +752,18 @@ function togglePlayer(name, chip) {
 function openPlayerEditor(name) {
   pePlayer        = name;
   const p         = allPlayers[name] || {};
-  peClasses       = new Set(p.classes || []);
-  peBanned        = new Set(p.banned  || []);
+  peClasses         = new Set(p.classes  || []);
+  peLevelingClasses = new Set(p.leveling || []);
+  peBanned          = new Set(p.banned   || []);
   peSessionBanned = new Set(sessionBans[name] || []);
   peSessionPin    = sessionPins[name] || null;
   peAllowSubMax   = p.allowSubMax || false;
-  peJobLevels     = p.jobLevels   || {};
-  peLodestoneId   = p.lodestoneId || "";
 
   document.getElementById('pePlayerName').textContent  = name;
-  document.getElementById('peLodestonId').value        = peLodestoneId;
   document.getElementById('peAllowSubMax').checked     = peAllowSubMax;
-  document.getElementById('peStatus').textContent      = "";
-  document.getElementById('peStatus').className        = "lodestone-status";
 
-  switchTab('spielbar');
   document.getElementById('playerEditorOverlay').classList.add('open');
-}
+  switchTab('spielbar');}
 
 function closePlayerEditor() {
   document.getElementById('playerEditorOverlay').classList.remove('open');
@@ -822,14 +771,12 @@ function closePlayerEditor() {
 
 async function savePlayerEditor() {
   if (!pePlayer) return;
-  peLodestoneId = document.getElementById('peLodestonId').value.trim();
   peAllowSubMax = document.getElementById('peAllowSubMax').checked;
   allPlayers[pePlayer] = {
-    lodestoneId: peLodestoneId,
     allowSubMax: peAllowSubMax,
-    classes:     Array.from(peClasses),
-    banned:      Array.from(peBanned),
-    jobLevels:   peJobLevels,
+    classes:  Array.from(peClasses),
+    leveling: Array.from(peLevelingClasses),
+    banned:   Array.from(peBanned),
   };
   sessionBans[pePlayer] = Array.from(peSessionBanned);
   sessionPins[pePlayer] = peSessionPin;
@@ -839,52 +786,77 @@ async function savePlayerEditor() {
 }
 
 function switchTab(tab) {
-  document.querySelectorAll('.editor-tab').forEach((el,i) => {
-    el.classList.toggle('active', ['spielbar','banned','session'][i] === tab);
+  // Tab-Buttons
+  ['spielbar','banned','session'].forEach(t => {
+    const btn = document.getElementById('tabBtn-' + t);
+    if (btn) btn.classList.toggle('active', t === tab);
   });
+  // Tab-Panels
   ['Spielbar','Banned','Session'].forEach(t => {
-    const el = document.getElementById('tab'+t);
-    if (el) el.classList.toggle('active', t.toLowerCase() === tab);
+    const panel = document.getElementById('tab' + t);
+    if (panel) panel.classList.toggle('active', t.toLowerCase() === tab);
   });
-  renderClassToggles();
+  renderCurrentTab(tab);
+}
+
+function renderCurrentTab(tab) {
+  if (tab === 'spielbar') {
+    renderSpielbarTab();
+  } else if (tab === 'banned') {
+    renderToggleGroup('peBannedGroups', (cls, grpKey) => ({
+      active: peBanned.has(cls), grpKey,
+      html: `<div class="tog-dot"></div>${cls}`,
+      onToggle: on => { on ? peBanned.add(cls) : peBanned.delete(cls); }
+    }));
+  } else if (tab === 'session') {
+    renderToggleGroup('peSessionGroups', (cls, grpKey) => ({
+      active: peSessionBanned.has(cls), grpKey,
+      html: `<div class="tog-dot"></div>${cls}`,
+      onToggle: on => { on ? peSessionBanned.add(cls) : peSessionBanned.delete(cls); }
+    }));
+  }
+}
+
+function renderSpielbarTab() {
+  // Hauptliste
+  renderToggleGroup('peClassGroups', (cls, grpKey) => ({
+    active: peClasses.has(cls), grpKey,
+    html: `<div class="tog-dot"></div>${cls}`,
+    onToggle: on => {
+      on ? peClasses.add(cls) : peClasses.delete(cls);
+      if (on) peLevelingClasses.delete(cls);
+      if (peAllowSubMax) renderLevelingGroup();
+      renderPinGrid();
+    }
+  }));
+  // Leveling-Sektion
+  const levelingSection = document.getElementById('peLevelingSection');
+  const pinSection      = document.getElementById('pePinSection');
+  levelingSection.style.display = peAllowSubMax ? 'block' : 'none';
+  pinSection.style.display      = peAllowSubMax ? 'block' : 'none';
+  if (peAllowSubMax) {
+    renderLevelingGroup();
+    renderPinGrid();
+  }
+}
+
+function renderLevelingGroup() {
+  renderToggleGroup('peLevelingGroups', (cls, grpKey) => {
+    if (peClasses.has(cls)) return null; // bereits in Hauptliste
+    return {
+      active: peLevelingClasses.has(cls), grpKey,
+      html: `<div class="tog-dot"></div>${cls}`,
+      onToggle: on => {
+        on ? peLevelingClasses.add(cls) : peLevelingClasses.delete(cls);
+        renderPinGrid();
+      }
+    };
+  });
 }
 
 function renderClassToggles() {
-  const allowSub = document.getElementById('peAllowSubMax').checked;
-  peAllowSubMax  = allowSub;
-
-  // ── Spielbare Jobs ──
-  renderToggleGroup('peClassGroups', (cls, grpKey) => {
-    const lv   = peJobLevels[cls];
-    const show = (lv === undefined) || lv >= 100 || allowSub;
-    if (!show) return null;
-    const active   = peClasses.has(cls);
-    const lvBadge  = lv !== undefined ? `<span class="class-level-badge">Lv${lv}</span>` : '';
-    return {
-      active, grpKey,
-      html: `<div class="tog-dot"></div>${cls}${lvBadge}`,
-      onToggle: on => { on ? peClasses.add(cls) : peClasses.delete(cls); renderPinGrid(); }
-    };
-  });
-
-  // ── Pin-Grid (Sub-100-Modus) ──
-  const pinSection = document.getElementById('pePinSection');
-  pinSection.style.display = allowSub ? 'block' : 'none';
-  if (allowSub) renderPinGrid();
-
-  // ── Dauerhaft gesperrt ──
-  renderToggleGroup('peBannedGroups', (cls, grpKey) => ({
-    active: peBanned.has(cls), grpKey,
-    html: `<div class="tog-dot"></div>${cls}`,
-    onToggle: on => { on ? peBanned.add(cls) : peBanned.delete(cls); }
-  }));
-
-  // ── Session-Sperre ──
-  renderToggleGroup('peSessionGroups', (cls, grpKey) => ({
-    active: peSessionBanned.has(cls), grpKey,
-    html: `<div class="tog-dot"></div>${cls}`,
-    onToggle: on => { on ? peSessionBanned.add(cls) : peSessionBanned.delete(cls); }
-  }));
+  peAllowSubMax = document.getElementById('peAllowSubMax').checked;
+  renderSpielbarTab();
 }
 
 function renderPinGrid() {
@@ -892,10 +864,10 @@ function renderPinGrid() {
   if (!grid) return;
   grid.innerHTML = '';
 
-  // Nur aktive Klassen zeigen
-  const active = Array.from(peClasses).sort();
-  if (active.length === 0) {
-    grid.innerHTML = '<span style="color:var(--text-dim);font-size:13px;font-style:italic">Keine spielbaren Jobs aktiv.</span>';
+  // Nur Leveling-Jobs zeigen (nicht die fertigen Level-100-Jobs)
+  const levelingOnly = Array.from(peLevelingClasses).sort();
+  if (levelingOnly.length === 0) {
+    grid.innerHTML = '<span style="color:var(--text-dim);font-size:13px;font-style:italic">Keine Leveling-Jobs ausgewählt.</span>';
     return;
   }
 
@@ -906,10 +878,9 @@ function renderPinGrid() {
   noneChip.onclick = () => { peSessionPin = null; renderPinGrid(); };
   grid.appendChild(noneChip);
 
-  active.forEach(cls => {
+  levelingOnly.forEach(cls => {
     const chip = document.createElement('div');
     chip.className = 'pin-chip' + (peSessionPin === cls ? ' pinned' : '');
-    const grpKey = CLASS_GROUPS.find(g=>g.classes.includes(cls))?.key || '';
     chip.innerHTML = `<span class="pin-icon"></span>${cls}`;
     chip.onclick = () => { peSessionPin = (peSessionPin === cls) ? null : cls; renderPinGrid(); };
     grid.appendChild(chip);
@@ -963,7 +934,7 @@ async function saveManageModal() {
     .split('\n').map(n=>n.trim()).filter(Boolean);
   const next  = {};
   names.forEach(name => {
-    next[name] = allPlayers[name] || { lodestoneId:"", allowSubMax:false, classes:[], banned:[], jobLevels:{} };
+    next[name] = allPlayers[name] || { allowSubMax:false, classes:[], leveling:[], banned:[] };
   });
   allPlayers      = next;
   selectedPlayers = selectedPlayers.filter(p => allPlayers[p]);
@@ -977,32 +948,9 @@ async function saveManageModal() {
 // ══════════════════════════════════════════════════════════════
 function pickSlotsForPlayerCount(allSlots, n) {
   if (n >= allSlots.length) return [...allSlots];
-
-  // Rollen zählen
-  const byRole = {};
-  allSlots.forEach(s => { byRole[s.role] = (byRole[s.role]||[]).concat(s); });
-
-  // Proportional verteilen: für jeden Slot einen "Gewicht"-Score
-  // Einfachste faire Methode: Runden-Robin über Rollen
-  const roles = Object.keys(byRole);
-  const pointers = {};
-  roles.forEach(r => pointers[r] = 0);
-
-  const picked = [];
-  let i = 0;
-  while (picked.length < n) {
-    const role = roles[i % roles.length];
-    const arr  = byRole[role];
-    const ptr  = pointers[role];
-    if (ptr < arr.length) {
-      picked.push(arr[ptr]);
-      pointers[role]++;
-    }
-    i++;
-    // Sicherheitsabbruch falls nicht genug Slots
-    if (i > allSlots.length * 3) break;
-  }
-  return picked;
+  // Komplett zufällig: beliebige n Slots aus der vollen Liste wählen.
+  // So kann auch 4× DPS oder 2× Heal + 2× DPS herauskommen.
+  return shuffle([...allSlots]).slice(0, n);
 }
 
 function classMatchesSlot(cls, slot) {
@@ -1014,17 +962,15 @@ function classMatchesSlot(cls, slot) {
 }
 
 function getEligibleClasses(name, slot) {
-  const p       = allPlayers[name] || {};
-  const banned  = new Set(p.banned || []);
-  const session = new Set(sessionBans[name] || []);
-  const allowSub = p.allowSubMax || false;
-  const levels  = p.jobLevels || {};
-  return (p.classes || []).filter(cls => {
+  const p        = allPlayers[name] || {};
+  const banned   = new Set(p.banned    || []);
+  const session  = new Set(sessionBans[name] || []);
+  // Normale Jobs + Leveling-Jobs zusammenführen
+  const allClasses = [...new Set([...(p.classes||[]), ...(p.leveling||[])])];
+  return allClasses.filter(cls => {
     if (!classMatchesSlot(cls, slot)) return false;
     if (banned.has(cls))  return false;
     if (session.has(cls)) return false;
-    const lv = levels[cls];
-    if (lv !== undefined && lv < 100 && !allowSub) return false;
     return true;
   });
 }
@@ -1122,11 +1068,13 @@ function renderResults(assignment, externSlots) {
     row.className   = `party-row role-${cd.role.toLowerCase()}`;
     row.style.animationDelay = `${idx*55}ms`;
     const pinMark = sessionPins[entry.player] === entry.class ? ' 📌' : '';
+    const pLeveling = allPlayers[entry.player]?.leveling || [];
+    const lvMark = pLeveling.includes(entry.class) ? '<span class="lv-badge">↑</span>' : '';
     row.innerHTML = `
       <div class="party-row-name">${entry.player}</div>
       <div class="party-row-class">
         <div class="class-role-dot"></div>
-        <div class="class-name">${entry.class}${pinMark}</div>
+        <div class="class-name">${entry.class}${pinMark}${lvMark}</div>
         <div class="class-sub">${cd.sub}</div>
       </div>`;
     list.appendChild(row);
@@ -1160,6 +1108,12 @@ function clearError()   { document.getElementById('errorMsg').textContent = ''; 
 // ══════════════════════════════════════════════════════════════
 // MODAL-SCHLIESSEN
 // ══════════════════════════════════════════════════════════════
+// ── Toggle-Listener für Leveling-Modus ──
+document.getElementById('peAllowSubMax').addEventListener('change', () => {
+  peAllowSubMax = document.getElementById('peAllowSubMax').checked;
+  renderSpielbarTab();
+});
+
 document.getElementById('playerEditorOverlay').addEventListener('click', e => { if(e.target===e.currentTarget) closePlayerEditor(); });
 document.getElementById('manageOverlay').addEventListener('click', e => { if(e.target===e.currentTarget) closeManageModal(); });
 
@@ -1172,7 +1126,6 @@ window.saveManageModal   = saveManageModal;
 window.openPlayerEditor  = openPlayerEditor;
 window.closePlayerEditor = closePlayerEditor;
 window.savePlayerEditor  = savePlayerEditor;
-window.fetchLodestone    = fetchLodestone;
 window.switchTab         = switchTab;
 window.rollClasses       = rollClasses;
 
